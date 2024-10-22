@@ -1,0 +1,24 @@
+minimum_cumulusci_version: '3.92.0'
+project:
+    name: attachmentDownloadUtil
+    package:
+        name: attachmentDownloadUtil
+        api_version: '61.0'
+    git:
+    source_format: sfdx
+
+tasks:
+    robot:
+        options:
+            suites: robot/attachmentDownloadUtil/tests
+            options:
+                outputdir: robot/attachmentDownloadUtil/results
+
+    robot_testdoc:
+        options:
+            path: robot/attachmentDownloadUtil/tests
+            output: robot/attachmentDownloadUtil/doc/attachmentDownloadUtil_tests.html
+
+    run_tests:
+        options:
+            required_org_code_coverage_percent: 75
