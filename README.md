@@ -16,3 +16,22 @@ The `sfdx-project.json` file contains useful configuration information for your 
 - [Salesforce CLI Setup Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm)
 - [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm)
 - [Salesforce CLI Command Reference](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference.htm)
+
+
+cci org info dev  
+cci org browser dev 
+cci flow run dev_org --org dev
+
+cci task run list_changes --org dev
+cci task run retrieve_changes --org dev
+cci task run dx_push --org dev
+
+cci task run deploy_qa_config --org dev
+
+cci org remove dev
+
+## Commands to to extract and load data
+https://trailhead.salesforce.com/content/learn/modules/data-management-with-cumulusci/add-demonstration-data-to-your-org
+cci task run generate_dataset_mapping --org dev
+cci task run extract_dataset --org dev
+cci task run load_dataset --org dev
