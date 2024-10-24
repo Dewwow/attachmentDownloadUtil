@@ -75,7 +75,24 @@ def download_file(args):
             csv_writer_lock.acquire()
             with open(results_path, 'a', encoding='UTF-8', newline='') as results_csv:
                 filewriter = csv.writer(results_csv, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                filewriter.writerow([record["Id"], record["Name"], record["Body"]])
+                filewriter.writerow([
+                    record["CreatedDate"],
+                    record["ParentId"],
+                    record["Id"],
+                    record["IsDeleted"],
+                    record["Name"],
+                    record["IsPrivate"],
+                    record["ContentType"],
+                    record["BodyLength"],
+                    record["Body"],
+                    record["OwnerId"],
+                    record["CreatedById"],
+                    record["LastModifiedDate"],
+                    record["LastModifiedById"],
+                    record["SystemModstamp"],
+                    record["Description"],
+                    record["IsPartnerShared"]
+                ])
             csv_writer_lock.release()
 
         return "Saved file to %s" % filename
@@ -83,22 +100,29 @@ def download_file(args):
         return "Couldn't download %s" % url
 
 
-def fetch_attachments(sf, content_document_links=None, output_directory=None, results_path=None,
+def fetch_attachments(sf, content_document_links=None, output_directory=None, filename_csv=None,
                 filename_pattern=None, content_document_id_name='ContentDocumentId', batch_size=100):
 
-    query_string = "SELECT Id, Name, Body FROM Attachment"
-    query_response = sf.query_all(query_string)
-    records_to_process = len(query_response["records"])
-    logging.debug("Attachment Query found {0} results".format(records_to_process))
+    query_string = "SELECT Id, IsDeleted, ParentId, Name, IsPrivate, ContentType, BodyLength, Body, OwnerId, CreatedDate, CreatedById, LastModifiedDate, LastModifiedById, SystemModstamp, Description, IsPartnerShared FROM Attachment ORDER BY CreatedDate "
+    query_string = "SELECT Id, Name FROM Account ORDER BY CreatedDate "
+    bulk_results = sf.bulk2.Account.query(query_string, max_records=1)
+    for i, data in enumerate(bulk_results):
+        print(data)
+        csv_writer_lock.acquire()
+        with open(filename_csv, 'a', encoding='UTF-8', newline='') as results_csv:
+            # Skip the first line of the data
+            results_csv.write('\n'.join(data.split('\n')[1:]))
+        csv_writer_lock.release()
+     
 
-    while query_response:
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            args = ((record, output_directory, sf, results_path)
-                    for record in query_response["records"])
-
-            for result in executor.map(download_file, args):
-                logging.debug(result)
-        break
+ #   while query_response:
+ #       with concurrent.futures.ProcessPoolExecutor() as executor:
+ #           args = ((record, output_directory, sf, results_path)
+ #                   for record in query_response["records"])
+#
+#            for esult in executor.map(download_file, args):
+#                logging.debug(result)
+#        break
         
     logging.debug('All records.')
 
@@ -124,6 +148,8 @@ def main():
     username = config['salesforce']['username']
     password = config['salesforce']['password']
     token = config['salesforce']['security_token']
+
+    filename_csv = config['salesforce']['filename_csv']
 
     is_sandbox = config['salesforce']['connect_to_sandbox']
     if is_sandbox == 'True':
@@ -155,10 +181,11 @@ def main():
     logging.info('Output directory: ' + output_directory)
     if not os.path.isdir(output_directory):
         os.mkdir(output_directory)
-    results_path = 'files.csv'
-    with open(results_path, 'w', encoding='UTF-8', newline='') as results_csv:
+ 
+    with open(filename_csv, 'w', encoding='UTF-8', newline='') as results_csv:
         filewriter = csv.writer(results_csv, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        filewriter.writerow(['Id', 'Name', 'Body'])
+        filewriter.writerow(['CreatedDate', 'ParentId', 'Id', 'IsDeleted',  'Name', 'IsPrivate', 'ContentType', 'BodyLength', 'Body', 'OwnerId', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'Description', 'IsPartnerShared'])
+
 
 
 #    content_document_links = sf.query_all(content_document_query)["records"]
@@ -166,7 +193,7 @@ def main():
 
     # Begin Downloads
     global_lock = threading.Lock()
-    fetch_attachments(sf=sf, results_path=results_path, output_directory=output_directory)
+    fetch_attachments(sf=sf, filename_csv=filename_csv, output_directory=output_directory)
 
 if __name__ == "__main__":
     main()
