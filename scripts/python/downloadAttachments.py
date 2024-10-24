@@ -75,7 +75,24 @@ def download_file(args):
             csv_writer_lock.acquire()
             with open(results_path, 'a', encoding='UTF-8', newline='') as results_csv:
                 filewriter = csv.writer(results_csv, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                filewriter.writerow([record["Id"], record["Name"], record["Body"]])
+                filewriter.writerow([
+                    record["CreatedDate"],
+                    record["ParentId"],
+                    record["Id"],
+                    record["IsDeleted"],
+                    record["Name"],
+                    record["IsPrivate"],
+                    record["ContentType"],
+                    record["BodyLength"],
+                    record["Body"],
+                    record["OwnerId"],
+                    record["CreatedById"],
+                    record["LastModifiedDate"],
+                    record["LastModifiedById"],
+                    record["SystemModstamp"],
+                    record["Description"],
+                    record["IsPartnerShared"]
+                ])
             csv_writer_lock.release()
 
         return "Saved file to %s" % filename
@@ -86,7 +103,7 @@ def download_file(args):
 def fetch_attachments(sf, content_document_links=None, output_directory=None, results_path=None,
                 filename_pattern=None, content_document_id_name='ContentDocumentId', batch_size=100):
 
-    query_string = "SELECT Id, Name, Body FROM Attachment"
+    query_string = "SELECT Id, IsDeleted, ParentId, Name, IsPrivate, ContentType, BodyLength, Body, OwnerId, CreatedDate, CreatedById, LastModifiedDate, LastModifiedById, SystemModstamp, Description, IsPartnerShared FROM Attachment ORDER BY CreatedDate "
     query_response = sf.query_all(query_string)
     records_to_process = len(query_response["records"])
     logging.debug("Attachment Query found {0} results".format(records_to_process))
@@ -158,7 +175,8 @@ def main():
     results_path = 'files.csv'
     with open(results_path, 'w', encoding='UTF-8', newline='') as results_csv:
         filewriter = csv.writer(results_csv, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        filewriter.writerow(['Id', 'Name', 'Body'])
+        filewriter.writerow(['CreatedDate', 'ParentId', 'Id', 'IsDeleted',  'Name', 'IsPrivate', 'ContentType', 'BodyLength', 'Body', 'OwnerId', 'CreatedById', 'LastModifiedDate', 'LastModifiedById', 'SystemModstamp', 'Description', 'IsPartnerShared'])
+
 
 
 #    content_document_links = sf.query_all(content_document_query)["records"]
